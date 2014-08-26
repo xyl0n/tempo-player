@@ -1,0 +1,4 @@
+#MusicSongList:prelight {
+    background-color: lighter (@theme_selected_bg_color);
+    color: #00f;
+}

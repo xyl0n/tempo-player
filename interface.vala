@@ -20,28 +20,8 @@ public class Tempo.Interface
     public Gtk.Revealer player_revealer;
 
     private Gtk.Grid player_grid;
-
-    private Gtk.Grid control_grid;
-
-    private Gtk.Button play_button;
-    private Gtk.Image play_img;
-    private Gtk.Image pause_img;
- 
-    private Gtk.Button seek_forward_button;
-    private Gtk.Image seek_forward_img;
     
-    private Gtk.Button seek_backward_button;
-    private Gtk.Image seek_backward_img;
-    
-    private Gtk.Scale media_pos;
     public bool is_seeking = false;
-    private Gtk.Label song_duration;
-    private Gtk.Label song_position;
-    private Gtk.Grid progress_grid;
-    
-    private Gtk.Label song_title;
-    private Gtk.Label song_artist;
-    private Gtk.Grid song_info;
         
     private Gtk.Stack view_stack;
     private Gtk.StackSwitcher view_switcher;

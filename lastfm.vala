@@ -27,15 +27,13 @@ public class LastFm {
     
     public string get_art_uri (string query_artist, string query_album) { 
         
-        var url = "http://ws.audioscrobbler.com/2.0/?api_key="+ API + 
-                   "&method=album.getinfo&artist=" + 
+        var url = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&artist=" + 
                    query_artist + "&album=" + query_album + "&format=json";
         
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
         
         var headers = new Soup.MessageHeaders (Soup.MessageHeadersType.REQUEST);
-        headers.append("api_key", API);
         headers.append("method", "album.getInfo");
         headers.append("artist", query_artist);
         headers.append("album", query_album);

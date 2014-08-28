@@ -6,7 +6,6 @@ public class Tempo.AlbumView {
         
     string music_dir;
     
-    private AlbumObject[] album_objects;
     private MusicManager music_files;
     
     public signal void album_image_clicked (AlbumObject album);
@@ -18,10 +17,10 @@ public class Tempo.AlbumView {
         
         music_files = new MusicManager ();
     
-        for (int i = 0; i < music_files.album_objects.length; i++) {
+        for (int i = 0; i < music_files.album_objects.length(); i++) {
         
             AlbumObject album = new AlbumObject ();
-            album = music_files.album_objects[i];
+            album = music_files.album_objects.nth_data(i);
         
             Gtk.Image image = album.album_art;
             
@@ -96,9 +95,7 @@ public class Tempo.AlbumView {
         this.music_dir = Tracker.Sparql.escape_string
                         (Gst.filename_to_uri
                         (Environment.get_user_special_dir
-                        (UserDirectory.MUSIC)));
-                                
-        album_objects = { };     
+                        (UserDirectory.MUSIC)));    
         
         art_scrolled.show();   
     }

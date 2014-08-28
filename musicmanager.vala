@@ -1,9 +1,12 @@
-class Tempo.MusicManager {
+public class Tempo.MusicManager {
 
     private string music_dir;
     
-    public MediaObject[] song_files;
-    public AlbumObject[] album_objects;
+    //public MediaObject[] song_files;
+    //public AlbumObject[] album_objects;
+    
+    public List<MediaObject> song_files;
+    public List<AlbumObject> album_objects;
     
     private LastFm lastfm;
     
@@ -15,8 +18,8 @@ class Tempo.MusicManager {
                             (Environment.get_user_special_dir
                             (UserDirectory.MUSIC)));
          
-        song_files = { };
-        album_objects = { };
+        song_files = new List<MediaObject> ();
+        album_objects = new List<AlbumObject> ();
         
         this.load_music ();
         this.load_albums();
@@ -29,9 +32,9 @@ class Tempo.MusicManager {
         }
         
   
-        set_album_art.begin ((obj, result) => {
-            set_album_art.end (result);
-        });
+        //set_album_art.begin ((obj, result) => {
+        //    set_album_art.end (result);
+        //});
   
         /*Thread<void*> album_art_thread = new Thread<void*> 
                                              ("album_art_thread", 
@@ -85,15 +88,15 @@ class Tempo.MusicManager {
             
             var song = new MediaObject(song_list[i]);
                         
-            song_files += song;
+            song_files.append(song);
         }
     }
     
     public bool find_from_uri (string uri, out MediaObject obj) {
         
-        for (int i = 0; i < song_files.length; i++) { 
-            if (song_files[i].media_uri == uri) {
-                obj = song_files[i];
+        for (int i = 0; i < song_files.length(); i++) { 
+            if (song_files.nth_data (i).media_uri == uri) {
+                obj = song_files.nth_data (i);
                 return true;
             }
         }
@@ -119,15 +122,15 @@ class Tempo.MusicManager {
             temp_album.song_count = cursor.get_string(2);
             temp_album.artist = artist_str;
                        
-            for (int x = 0; x < this.song_files.length; x++) {
+            for (int x = 0; x < this.song_files.length(); x++) {
             
-                if (this.song_files[x].get_tag_album () == temp_album.title) {
+                if (this.song_files.nth_data(x).album == temp_album.title) {
                 
-                    temp_album.add_song_to_album (this.song_files[x]);
+                    temp_album.add_song_to_album (this.song_files.nth_data(x));
                 }
             }
                         
-            this.album_objects += temp_album;
+            this.album_objects.append (temp_album);
         }
     }
     
@@ -179,21 +182,21 @@ class Tempo.MusicManager {
               
         ThreadFunc<void*> run = () => { 
         Idle.add((owned) callback);
-        for (int i = 0; i < album_objects.length; i++) {
-            string album = album_objects[i].title;
+        for (int i = 0; i < album_objects.length(); i++) {
+            string album = album_objects.nth_data(i).title;
             album = album.replace (" ", "+");
             
-            string artist = album_objects[i].artist;
+            string artist = album_objects.nth_data(i).artist;
             artist = artist.replace (" ", "+");
         
             string url = lastfm.get_art_uri (artist, album);
             
-            stdout.printf ("\nGETTING ART FOR: %s\n", album_objects[i].title);
+            stdout.printf ("\nGETTING ART FOR: %s\n", album_objects.nth_data(i).title);
             
             //album_object[i].album_art_location = url; //For future reference?
             
             Gdk.Pixbuf pixbuf = lastfm.download_cover_art (url);
-            album_objects[i].album_art.set_from_pixbuf (pixbuf);
+            album_objects.nth_data(i).album_art.set_from_pixbuf (pixbuf);
             string file_uri = "";
             //save_art_to_dir (pixbuf, url, out file_uri);
             //stdout.printf ("\nURI IS: %s\n", file_uri);

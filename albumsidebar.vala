@@ -99,44 +99,48 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
         
             var event_box = new Gtk.EventBox ();
                 
-            var song = current_album.get_song_at_index(i);
+            var song = current_album.get_song_at_number(i);
         
-            var song_label = new Gtk.Label
-                                 (song.get_tag_title());
+            if (song != null) {
+        
+                var song_label = new Gtk.Label
+                                     (song.title);
                                  
-            stdout.printf ("SONG: %s\n", song.get_tag_title());
+                stdout.printf ("SONG: %s\n", song.title);
             
-            song_label.set_size_request (-1, -1); //??
+                song_label.set_size_request (-1, -1);
             
-            song_label.set_alignment (0.0f, 0.5f);
-            
-            song_label.margin_top = 3;
-            song_label.margin_bottom = 3;
-            song_label.margin_start = 24;
-            song_label.margin_end = 6;
-            
-            song_label.get_style_context().add_class ("sidebar-item");
-            
-            song_label.expand = false;
-            
-            song_label.set_size_request (300, -1);
-            
-            song_label.set_line_wrap (true);
-            
-            song_label.size_allocate.connect ((allocation) => {    
-                song_label.set_size_request (allocation.width - 50, -1);
-            });
-                         
-            event_box.add (song_label);             
-            event_box.button_press_event.connect (() => {
-                this.song_clicked (song);
+                song_label.set_alignment (0.0f, 0.5f);
                 
-                return true;
-            });
+                song_label.margin_top = 3;
+                song_label.margin_bottom = 3;
+                song_label.margin_start = 24;
+                song_label.margin_end = 6;
+                
+                song_label.get_style_context().add_class ("sidebar-item");
+                
+                song_label.expand = false;
+                
+                song_label.set_size_request (300, -1);
+                
+                song_label.set_line_wrap (true);
+                
+                song_label.size_allocate.connect ((allocation) => {    
+                    song_label.set_size_request (allocation.width - 50, -1);
+                });
+                         
+                event_box.add (song_label);             
+                event_box.button_press_event.connect (() => {
+                    this.song_clicked (song);
+                
+                    return true;
+                });
             
-            event_box.name = "MusicSongList";
+                event_box.name = "MusicSongList";
             
-            this.attach (event_box, 0, i + 3, 1, 1);
+                this.attach (event_box, 0, i + 3, 1, 1);
+            
+            }
         }    
     }
     

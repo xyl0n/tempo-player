@@ -21,8 +21,16 @@ public class Tempo.AlbumObject {
         this.song_list += song;
     }
     
-    public MediaObject get_song_at_index (int index) {
-        return song_list[index];
+    public MediaObject? get_song_at_number (int num) {
+        num++;
+        for (int i = 0; i < song_list.length; i++) {
+            if (song_list[i].track_num == num) {
+                stdout.printf ("SONG: %s at NUMBER: %d\n", song_list[i].title, (int)song_list[i].track_num);
+                return song_list[i];
+            }
+        }
+        
+        return null;
     } 
     
     public int get_song_count () {

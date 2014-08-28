@@ -5,15 +5,16 @@ public class Tempo.StreamPlayer {
     
     private string media_uri;
     
-    private bool playing;
-
     public signal void media_changed ();
     public signal void media_paused ();
     public signal void media_playing ();
     public signal void media_position_changed (int64 media_pos);
     public signal void media_duration_changed (int64 duration);
+    public signal void end_of_stream ();
         
-    public StreamPlayer (/*Files[] media_files*/) {
+    private MainLoop loop = new MainLoop();    
+        
+    public StreamPlayer () {
         playbin = Gst.ElementFactory.make ("playbin", "play");
         
         Gst.Bus bus = playbin.get_bus ();
@@ -21,14 +22,9 @@ public class Tempo.StreamPlayer {
         
         playbin.set_state(Gst.State.NULL);
         
-        media_uri = " ";    
-        
-        playing = false;    
+        media_uri = " ";      
     }
-    
-    ~StreamPlayer () {
-    
-    }
+
         
     private bool bus_callback (Gst.Bus bus, Gst.Message message) {
         switch (message.type) {
@@ -40,6 +36,7 @@ public class Tempo.StreamPlayer {
             break;
         case MessageType.EOS:
             stdout.printf ("end of stream\n");
+            end_of_stream ();
             break;
         case MessageType.STATE_CHANGED:
             Gst.State old_state;
@@ -97,20 +94,15 @@ public class Tempo.StreamPlayer {
     public void play () {
         playbin.uri = media_uri;
         playbin.set_state (State.PLAYING);
-        
-        playing = true;
-        
-        /*If paused, request song position, use playbin.seek(...) with int64 to carry on song*/
     }
 
     public void pause () {
         playbin.set_state(Gst.State.PAUSED);
-        playing = false;
+        
     }
 
     public void stop () {
         playbin.set_state (Gst.State.NULL);
-        playing = false;
     }
     
     public Gst.State get_state () {
@@ -142,9 +134,6 @@ public class Tempo.StreamPlayer {
         
         playbin.query_position (format, out pos);
         
-        //stdout.printf ("\nPosition %" + int64.FORMAT + "\n",
-		//				pos);
-		
 		return pos;
     }
     

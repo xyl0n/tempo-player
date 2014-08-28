@@ -8,6 +8,7 @@ public class Tempo.MediaObject {
     public string artist;
     public string genre;
     public string album;
+    public uint track_num;
 
     private File song_file;
     
@@ -45,17 +46,11 @@ public class Tempo.MediaObject {
         var file_tags = info.get_tags();    
         string tag_val;
         
-        file_tags.get_string ("title", out tag_val);
-        this.title = tag_val;
-               
-        file_tags.get_string ("artist", out tag_val);
-        this.artist = tag_val;
-        
-        file_tags.get_string ("genre", out tag_val);
-        this.genre = tag_val;
-        
-        file_tags.get_string ("album", out tag_val);
-        this.album = tag_val;
+        file_tags.get_string (Gst.Tags.TITLE, out title);
+        file_tags.get_string (Gst.Tags.ARTIST, out artist);        
+        file_tags.get_string (Gst.Tags.GENRE, out genre);
+        file_tags.get_string (Gst.Tags.ALBUM, out album);
+        file_tags.get_uint (Gst.Tags.TRACK_NUMBER, out track_num);
     }
     
     public string get_tag_title () {

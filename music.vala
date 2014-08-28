@@ -18,25 +18,26 @@
  */
 
 using GLib;
-using Gtk;
 
 public class Tempo.Main : Object {
-    private Interface window_ui;
+    public Interface window_ui;
     private StreamPlayer player;
 
     private MusicManager manager;
     
     public LastFm last_fm;
+    
+    public Gtk.Window window;
           
     public Main ()
     {        
-        Window window = new Window();
+        window = new Gtk.Window();
         
         window_ui = new Interface(window);
-        
+                
         manager = new MusicManager();  
                                                
-        window.set_title ("Music");
+        window.set_title ("Tempo");
         window.set_default_size (1200, 800);
 
         var screen = Gdk.Screen.get_default();
@@ -48,14 +49,21 @@ public class Tempo.Main : Object {
         context.add_provider_for_screen (screen, css, Gtk.STYLE_PROVIDER_PRIORITY_USER);
 
         window.show_all();
+        
+        window.destroy.connect(on_destroy);        
                 
-        window.destroy.connect(on_destroy);
+        window_ui.stream_finished.connect ( () => {
+            window.delete_event.disconnect (window.hide_on_delete);
+            window.destroy.connect(on_destroy);
+        });
+        window_ui.stream_playing.connect ( () => {
+            window.delete_event.connect (window.hide_on_delete);
+        });
     }
 
-    public void on_destroy (Widget window) {
+    public void on_destroy (Gtk.Widget window) {
+        
         Gtk.main_quit();
-        //player.stop();
-        //window_ui.app_running = false;
     }
     
     static int main (string[] args) {
@@ -64,17 +72,14 @@ public class Tempo.Main : Object {
         
         var app = new Main ();
 
-        //while (app.is_running) {
-        //app.last_fm = new LastFm();
-        //Gdk.Pixbuf? img = app.last_fm.download_cover_art 
-        //    (app.last_fm.get_art_uri ("Green+Day", "American+Idiot"));
+        var icon = new Gtk.StatusIcon.from_stock (Gtk.Stock.ABOUT);
+        icon.activate.connect (() => {
+            app.window.show_all();
+        });
+        icon.set_visible (true);
+        
         Gtk.main ();
-            
-        //execute in new thread*/      
-            
-        //    app.update_all ();
-        //}
-		
+
         return 0;
     }
 }

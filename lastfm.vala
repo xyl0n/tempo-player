@@ -1,6 +1,6 @@
 public class LastFm {
     
-    private const string API = "API KEY GOES HERE";
+    private const string API = ""; //Need this unfortunately :(
     
     public string? image_uri = null;
     

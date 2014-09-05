@@ -1,6 +1,10 @@
 public class LastFm {
     
-    public Gdk.Pixbuf? download_cover_art (string url) {
+    private const string API = "API KEY GOES HERE";
+    
+    public string? image_uri = null;
+    
+    public void download_cover_art (string url, string dest) {
         
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
@@ -13,116 +17,66 @@ public class LastFm {
         Gdk.Pixbuf image = loader.get_pixbuf ();
         string name = generate_image_key (url);
         
-        image.save (name, "png"); //currently it just saves the album art in the source folder
-                                  // TODO: Make it save and load from a cache folder
-        
+        image.save (dest + name, "png");        
+                
         loader.close ();
-        
-        return new Gdk.Pixbuf.from_file_at_scale (name, 128, 128, true);
     }    
     
     public string generate_image_key (string text) {
         return GLib.Checksum.compute_for_string(ChecksumType.MD5, text, text.length);
     }    
-    
-    public string get_art_uri (string query_artist, string query_album) { 
         
-        var url = "http://ws.audioscrobbler.com/2.0/?method=album.getinfo&artist=" + 
-                   query_artist + "&album=" + query_album + "&format=json";
+    public string? get_art_uri (string query_album, string query_artist) {
+        var url = "http://ws.audioscrobbler.com/2.0/?api_key="+ API + 
+                  "&method=album.getinfo&artist=" + query_artist + "&album=" + query_album;
         
-        var session = new Soup.Session ();
-        var message = new Soup.Message ("GET", url);
+        Xml.Doc* doc = Xml.Parser.parse_file (url);
+        doc->save_file ("test2");
+        if (doc == null) {
+            stderr.printf ("LastFM Album info not found\n");
+            return null;
+        }
         
-        var headers = new Soup.MessageHeaders (Soup.MessageHeadersType.REQUEST);
-        headers.append("method", "album.getInfo");
-        headers.append("artist", query_artist);
-        headers.append("album", query_album);
+        Xml.Node* root = doc->get_root_element ();
+        if (root == null) {
+            delete doc;
+            stderr.printf ("Could not find any elements for album %s\n", query_album);
+            return null;
+        }
+
+        parse_node (root, "");     
         
-        session.timeout = 30;
+        delete doc;   
         
-        session.send_message (message);
-                        
-        Json.Parser parser = new Json.Parser ();
-        
-        parser.load_from_data ((string)message.response_body.data);
-        Json.Node root = parser.get_root ();        
-                
-        return parse_node (root, " ");
+        return this.image_uri;     
     }
     
-    private string parse_node (Json.Node node, string parent) {
     
-        Json.Object obj = node.get_object ();
+    // Sorry for stealing your code elementary :P
     
-        string str = null;
+    private void parse_node (Xml.Node* node, string parent) {
     
-        foreach (string name in obj.get_members()) {
-            switch (name) {
-            case "album":
-                
-                var child = obj.get_member (name);
-                var child_obj = child.get_object ();
-                
-                foreach (string child_name in child_obj.get_members()) {
-                    switch (child_name) {
-                    case "image":
-                        var image_array = child_obj.get_member (child_name).get_array();
-                        
-                        int i = 1;
-                        
-                        foreach (Json.Node child_node in image_array.get_elements()) {
-                            str = get_image_uri (child_node, i, image_array);
-                            i++;
-                        }
-                    break;
+        // Loop over the passed node's children
+        for (Xml.Node* iter = node->children; iter != null; iter = iter->next) {
+        
+            // Spaces between tags are also nodes, discard them
+            if (iter->type != Xml.ElementType.ELEMENT_NODE) {
+                continue;
+            }
+
+            string node_name = iter->name;
+            string node_content = iter->get_content ();
+                       
+            if(parent == "album") {
+                if(node_name == "image") {
+                    if(iter->get_prop("size") == "large") {
+                        image_uri = node_content;
                     }
-                }                
-            break;
+                }
             }
+
+            // Followed by its children nodes
+            parse_node (iter, parent + node_name);
         }
-        
-        return str;
-    }
-    
-    private string get_image_uri (Json.Node node, uint number, Json.Array parent_array) {
-        
-        Json.Object obj = node.get_object ();
-                
-        string str = null;        
-                
-        foreach (string name in obj.get_members()) {
-            switch (name) {
-                case "size":
-                    Json.Node item = obj.get_member (name);
-                    
-                    if (item.get_string() == "mega") {
-                        str = get_node_string (item, number, parent_array);     
-                    }
-                                        
-                    break;
-            }
-        }
-        
-        return str;    
-    }
-    
-    private string get_node_string (Json.Node node, uint number, Json.Array parent_array) {
-        
-        Json.Object child = parent_array.get_object_element (number - 1);
-        
-        string url = null;
-        
-        foreach (string name in child.get_members()) {
-            switch (name) {
-                case "#text":
-                    Json.Node item = child.get_member (name);
-                                        
-                    url = child.get_string_member ("#text");
-                                        
-                    break;
-            }
-        }
-        
-        return url;
     }
 }

@@ -24,7 +24,6 @@ public class Tempo.AlbumView {
         
             Gtk.Image image = album.album_art;
             
-            image.set_pixel_size (128);
             image.xalign = 0.5f;
             image.yalign = 0.5f;
             
@@ -78,7 +77,7 @@ public class Tempo.AlbumView {
         
         art_box.set_homogeneous (true);
         
-        art_box.set_row_spacing (24);
+        art_box.set_row_spacing (12);
         art_box.set_column_spacing (12);
         
         art_box.set_valign (Gtk.Align.START);

@@ -1,80 +1,122 @@
 public class Tempo.QueueSidebar : Gtk.Grid {
         
-    private Gtk.Revealer item_revealer;
     private Gtk.Box item_box;
     
-    private MediaObject[] song_list = { };
+    private List<MediaObject> song_list;
+    
+    public signal void item_clicked (MediaObject media, int position);
+    public signal void queue_clear_request ();
     
     public QueueSidebar () {
     
+        song_list = new List<MediaObject> ();
+        
+        //this.get_style_context().add_class ("view");
+    
         this.set_orientation (Gtk.Orientation.VERTICAL);
         this.expand = false;
-        this.set_size_request (200, -1);
-        
-        item_revealer = new Gtk.Revealer ();
-        item_revealer.set_transition_type (Gtk.RevealerTransitionType.CROSSFADE);
-                
+        this.set_size_request (250, -1);
+                        
         item_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 3);
         item_box.expand = false;
-        //item_revealer.add (item_box);
-        //this.attach (item_box, 0, 1, 1, 1);
+        
+        // Heading for the sidebar
         
         var heading = new Gtk.Label ("Queue");
         heading.set_markup ("<b>Queue</b>");    
-        heading.yalign = 0;
+        heading.yalign = 0.5f;
         heading.xalign = 0;      
-        heading.expand = false;
-        heading.margin_top = 6;
+        heading.hexpand = true;
         heading.margin_start = 6;
         
-        var heading_separator = new Gtk.Separator(Gtk.Orientation.HORIZONTAL);
-        heading_separator.set_hexpand(true);
-        heading_separator.margin_top = 3;
-        heading_separator.margin_start = 6;
-        heading_separator.margin_end = 12;
-        heading_separator.margin_bottom = 3;
-        this.attach (heading_separator, 0, 1, 1, 1);
+        //Make it big
         
         var attributes = new Pango.AttrList ();
-        var scale = Pango.attr_scale_new (1.1);
+        var scale = Pango.attr_scale_new (1.2);
         
-        attributes.insert (scale.copy());
-              
+        attributes.insert (scale.copy());              
         heading.set_attributes (attributes);
         
-        this.attach (heading, 0, 0, 1, 1);
+        //Add a button to clear the queue
         
-        var separator = new Gtk.Separator (Gtk.Orientation.VERTICAL);
-        separator.expand = true;
+        var clear_button = new Gtk.Button.from_icon_name ("user-trash-symbolic", 
+                                                          Gtk.IconSize.BUTTON);
+        clear_button.margin_top = 3;
+        clear_button.margin_start = 3;
+        clear_button.margin_end = 3;
+        clear_button.margin_bottom = 3;
         
-        //this.attach (separator, 1, 0, 1, 1);
+        clear_button.clicked.connect (() => {
+            queue_clear_request ();
+        });
         
-        //this.update_sidebar ();
+        var heading_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        heading_box.pack_start (heading, true, true);
+        heading_box.pack_start (clear_button, false);
+                
+                        
+        this.attach (heading_box, 0, 0, 1, 1);
+        this.attach (item_box, 0, 1, 1, 1);
     }
     
-    public void update_sidebar () {
+    public void update_sidebar (int current_pos) {
         this.clear_widgets ();
                 
-        for (int i = 0; i < this.song_list.length; i++) {
-            var name = new Gtk.Label (song_list[i].title);
+        for (int i = 0; i < this.song_list.length(); i++) {
+        
+            var box = new Gtk.EventBox ();
+            
+            var current_song = song_list.nth_data (i);
+        
+            var name = new Gtk.Label (current_song.title);
             name.yalign = 0;
             name.xalign = 0;
             name.expand = false;
-            
             name.margin_start = 12;
-            item_box.pack_start (name, false, false);
-            //this.attach (name, 0, i + 1, 1, 1);
-            stdout.printf ("%s\n", song_list[i].title);
-        }
-                        
-        this.attach (item_box, 0, 2, 1, 1);   
-        this.show ();  
-    }
-    
-    public void set_queue (MediaObject[] songs) {
-        song_list = songs;
-    }
+            name.margin_end = 12;
+            name.margin_top = 3;
+            name.margin_bottom = 3;
+                                    
+            name.set_ellipsize (Pango.EllipsizeMode.END);
+            name.set_max_width_chars (20);
             
+            if (i == current_pos) {
+                name.set_markup ("<b>" + current_song.title + "</b>");
+            } else if (i < current_pos) {
+                name.get_style_context().add_class ("dim-label");
+            }
+            
+            box.add (name);
+                        
+            box.button_press_event.connect (() => {
+                                        
+                var children = item_box.get_children ();
+        
+                for (int iter = 0; iter < children.length(); iter++) {
+                    if (children.nth_data (iter) == box) {
+                        item_clicked (current_song, iter);
+                    }
+                }
+                
+                return true;
+            });
+                        
+            item_box.pack_start (box, false, false);
+        }
+                           
+        item_box.show_all(); 
+    }
+        
+    public void set_queue (List<MediaObject> songs) {
+        // remove existing songs
+        song_list.foreach ((entry) => {
+            song_list.remove (entry);
+        }); 
+        
+        //re-make list        
+        song_list = songs.copy();
+    }
+       
     private void clear_widgets () {
         var children = this.item_box.get_children ();
         

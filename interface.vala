@@ -1,5 +1,7 @@
 public class Tempo.Interface
 {
+    public Utils utils;
+
     private Gtk.Grid song_layout;
     
     private Gtk.Grid window_layout;
@@ -10,6 +12,10 @@ public class Tempo.Interface
     private Gtk.Revealer sidebar_revealer;
     
     public QueueSidebar queue_sidebar;
+    public Gtk.Revealer queue_revealer;
+    public Gtk.Button queue_visible_btn;
+    public Gtk.Image queue_show_img;
+    public Gtk.Image queue_hide_img;
     
 	private Gtk.HeaderBar header;
 	
@@ -37,24 +43,25 @@ public class Tempo.Interface
     public bool app_running;
         
     public signal void stream_playing ();
-    public signal void stream_finished ();    
+    public signal void stream_finished (); 
         
 	public Interface (Gtk.Window window)
 	{	
 	    app_running = true;
 	    
-	    signal_handler = new SignalHandler (this);
+	    utils = new Utils (this);
+	    
+	    signal_handler = new SignalHandler (this);	    
 	
 	    manager = new MusicManager ();
 	    player = new StreamPlayer();
-	    player.end_of_stream.connect (() => {
-	        stream_finished (); //Use queuemanager.end_of_stream in future
-	    });
+	    player.end_of_stream.connect (signal_handler.on_current_song_end);
 	    
 	    album_view = new AlbumView();
 	    queue_manager = new QueueManager ();
 	    
 	    queue_manager.queue_changed.connect (signal_handler.on_queue_changed);
+	    queue_manager.current_position_changed.connect (signal_handler.on_queue_position_changed);
 	    
 	    album_view.album_image_clicked.connect (signal_handler.on_album_clicked);
 	    
@@ -63,9 +70,11 @@ public class Tempo.Interface
 	    
 	    album_sidebar = new AlbumSidebar ();
 	    album_sidebar.song_clicked.connect (signal_handler.on_sidebar_song_click);
+	    album_sidebar.album_to_queue.connect (signal_handler.on_album_add);
 	    sidebar_scrolled = new Gtk.ScrolledWindow (null, null);
 	    sidebar_scrolled.add (album_sidebar);
 	    sidebar_scrolled.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+
 	    sidebar_revealer = new Gtk.Revealer ();
 	    sidebar_revealer.add (sidebar_scrolled);
 	    sidebar_revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_LEFT);
@@ -91,6 +100,9 @@ public class Tempo.Interface
         player_revealer.add (player_bar);
         
         player_bar.play_btn.clicked.connect (signal_handler.on_play_button_clicked);
+        player_bar.seek_forward_btn.clicked.connect (signal_handler.on_forward_seek);
+        player_bar.seek_backward_btn.clicked.connect (signal_handler.on_backward_seek);
+        player_bar.shuffle_btn.clicked.connect (signal_handler.on_shuffle);
 
         player_bar.media_scale.button_release_event.connect (signal_handler.on_media_seeked);
         player_bar.media_scale.button_press_event.connect (() => {
@@ -99,12 +111,12 @@ public class Tempo.Interface
             return false;
         });
 
-        //this.setup_player_bar_images();
-        //this.setup_player_bar ();
-        
+        //Schedule the media scale to be updated at regular intervals
         GLib.Timeout.add (1000, (SourceFunc) this.update_media_controls);
                 
         window.add (this.window_layout);
+        
+        //Setup the Library view - TODO: redo this
         
         this.setup_music_list ();
         
@@ -125,10 +137,35 @@ public class Tempo.Interface
 		album_pane.show();
 		
 		queue_sidebar = new QueueSidebar ();
+		queue_sidebar.item_clicked.connect (signal_handler.on_queue_item_click);
+		queue_sidebar.queue_clear_request.connect (signal_handler.on_queue_clear_request);
+		var queue_scroll = new Gtk.ScrolledWindow (null, null);
+		queue_scroll.add (queue_sidebar);
+		queue_scroll.set_policy (Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC);
+		queue_revealer = new Gtk.Revealer ();
+		queue_revealer.add (queue_scroll);
+		queue_revealer.set_transition_type (Gtk.RevealerTransitionType.SLIDE_RIGHT);
+		
+		// Queue visibility button
+		
+		queue_show_img = new Gtk.Image.from_icon_name ("go-next-symbolic", Gtk.IconSize.BUTTON);
+		queue_hide_img = new Gtk.Image.from_icon_name ("go-previous-symbolic", Gtk.IconSize.BUTTON);
+		
+		queue_visible_btn = new Gtk.Button ();
+		queue_visible_btn.set_image (queue_show_img);
+		queue_visible_btn.valign = Gtk.Align.CENTER;
+		queue_visible_btn.halign = Gtk.Align.CENTER;
+        queue_visible_btn.margin_start = 6;
+        queue_visible_btn.margin_end = 6;
+        
+        queue_visible_btn.clicked.connect (signal_handler.queue_reveal_request);           
+		
+		// Album view
 		
 		Gtk.Box albums_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
-		albums_box.pack_start (queue_sidebar, false);
+		albums_box.pack_start (queue_revealer, false);
 		albums_box.pack_start (new Gtk.Separator (Gtk.Orientation.VERTICAL), false);
+		albums_box.pack_start (queue_visible_btn, false, false);
 		albums_box.pack_start (album_pane, true);
 		albums_box.show ();	
 		
@@ -142,6 +179,7 @@ public class Tempo.Interface
         window_layout.attach (new Gtk.Separator (Gtk.Orientation.HORIZONTAL), 0, 1, 1, 1);
         
         view_stack.set_visible_child_name ("albums");
+         
         
         player.media_changed.connect (signal_handler.on_media_changed);
 	    player.media_playing.connect (signal_handler.on_media_play);
@@ -233,8 +271,7 @@ public class Tempo.Interface
             
             i = view_path.get_indices ();
         }   
-                        
-        player.set_media_file(manager.song_files.nth_data(i[0] + 1).media_uri);
+    
         player.play();
     }
 }

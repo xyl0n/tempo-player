@@ -3,7 +3,9 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
     private AlbumObject current_album;
     
     public signal void has_children ();
-    
+    public signal void album_to_queue (AlbumObject album);
+    public signal void album_shuffle (AlbumObject album);
+        
     public AlbumSidebar () {
         this.get_style_context().add_class (Gtk.STYLE_CLASS_SIDEBAR);
         
@@ -35,7 +37,7 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
         if (current_album.album_art.get_pixbuf() != null) {    
             img.set_from_pixbuf (current_album.album_art.get_pixbuf());
         } else {
-            img.set_from_icon_name ("folder-music-symbolic", icon_size);
+            img.set_from_icon_name ("folder-music-symbolic", icon_size); // get image directly from album object in future
         }
         
         if (img != null) {
@@ -95,6 +97,28 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
         
         this.attach (artist_name, 0, 2, 1, 1);
         
+        var album_add_btn = new Gtk.Button.from_icon_name 
+                                    ("list-add-symbolic", Gtk.IconSize.BUTTON);
+        album_add_btn.clicked.connect (() => {
+            album_to_queue (current_album);
+        });
+       
+        var album_shuffle_btn = new Gtk.Button.from_icon_name 
+                                    ("media-playlist-shuffle-symbolic", Gtk.IconSize.BUTTON);
+        album_shuffle_btn.clicked.connect (() => {
+            album_shuffle (current_album);
+        });
+       
+        var album_options_box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        album_options_box.pack_start (album_add_btn, false);
+        album_options_box.pack_start (album_shuffle_btn, false);
+        album_options_box.margin = 6;
+        album_options_box.get_style_context().add_class (Gtk.STYLE_CLASS_LINKED);
+        album_options_box.set_halign (Gtk.Align.CENTER);
+        
+       
+        this.attach (album_options_box, 0, 3, 1, 1);
+        
         for (int i = 0; i < current_album.get_song_count(); i++) {
         
             var event_box = new Gtk.EventBox ();
@@ -105,9 +129,7 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
         
                 var song_label = new Gtk.Label
                                      (song.title);
-                                 
-                stdout.printf ("SONG: %s\n", song.title);
-            
+                                             
                 song_label.set_size_request (-1, -1);
             
                 song_label.set_alignment (0.0f, 0.5f);
@@ -120,8 +142,9 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
                 song_label.get_style_context().add_class ("sidebar-item");
                 
                 song_label.expand = false;
-                
-                song_label.set_size_request (300, -1);
+                                
+                song_label.set_ellipsize (Pango.EllipsizeMode.END);
+                song_label.set_max_width_chars (40);
                 
                 song_label.set_line_wrap (true);
                 
@@ -138,7 +161,7 @@ public class Tempo.AlbumSidebar : Gtk.Grid {
             
                 event_box.name = "MusicSongList";
             
-                this.attach (event_box, 0, i + 3, 1, 1);
+                this.attach (event_box, 0, i + 4, 1, 1);
             
             }
         }    

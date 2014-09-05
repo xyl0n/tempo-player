@@ -39,6 +39,7 @@ public class Tempo.Main : Object {
                                                
         window.set_title ("Tempo");
         window.set_default_size (1200, 800);
+        window.set_icon_name ("multimedia-audio-player");
 
         var screen = Gdk.Screen.get_default();
         
@@ -66,14 +67,19 @@ public class Tempo.Main : Object {
         Gtk.main_quit();
     }
     
+    public void setup_icon_interface () {
+
+    }
+    
     static int main (string[] args) {
         Gtk.init (ref args);
         Gst.init (ref args);
         
         var app = new Main ();
 
-        var icon = new Gtk.StatusIcon.from_stock (Gtk.Stock.ABOUT);
+        var icon = new Gtk.StatusIcon.from_icon_name ("multimedia-audio-player");
         icon.activate.connect (() => {
+            app.setup_icon_interface();
             app.window.show_all();
         });
         icon.set_visible (true);

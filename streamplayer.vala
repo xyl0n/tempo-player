@@ -35,7 +35,7 @@ public class Tempo.StreamPlayer {
             stdout.printf ("Error: %s\n", err.message);
             break;
         case MessageType.EOS:
-            stdout.printf ("end of stream\n");
+            stdout.printf ("\n\n\n\n\nEOS\n\n\n\n\n\n");
             end_of_stream ();
             break;
         case MessageType.STATE_CHANGED:
@@ -44,9 +44,9 @@ public class Tempo.StreamPlayer {
             Gst.State pending;
             message.parse_state_changed (out old_state, out new_state,
                                          out pending);
-            //stdout.printf ("state changed: %s->%s:%s\n",
-            //               oldstate.to_string (), newstate.to_string (),
-            //               pending.to_string ());
+            stdout.printf ("state changed: %s->%s:%s\n",
+                           old_state.to_string (), new_state.to_string (),
+                           pending.to_string ());
             
             if (new_state == Gst.State.PLAYING) {
                 media_playing();
@@ -55,31 +55,16 @@ public class Tempo.StreamPlayer {
                 media_paused();
             }
             
+            if (old_state == Gst.State.NULL && new_state == Gst.State.READY &&
+                pending == Gst.State.PAUSED) {
+                set_state (Gst.State.PLAYING);
+            }
+            
             break;
-        /*case MessageType.TAG:
-            
-            string str;
-                
-            Gst.TagList tag;
-            message.parse_tag (out tag);
-            tag.get_string ("title", out title);
-                       
-            //var str = tag.to_string ();
-            
-            //stdout.printf ("\nTitle is: %s\n", title);
-            //stdout.printf ("\nAll tags are: %s\n", str);
-            
-            break;*/
         case MessageType.STREAM_START:
             this.media_changed ();
             this.media_duration_changed(this.get_song_duration());
             break;
-        case MessageType.DURATION_CHANGED:
-            //this.media_duration_changed(this.get_song_duration());
-            break;
-        case MessageType.ANY:
-            this.media_position_changed (this.get_song_position());
-        break;
         default:
             break;
         }
@@ -91,14 +76,17 @@ public class Tempo.StreamPlayer {
         this.media_uri = uri;
     }
 
+    public string get_current_media_file () {
+        return this.media_uri;
+    }
+
     public void play () {
         playbin.uri = media_uri;
         playbin.set_state (State.PLAYING);
     }
 
     public void pause () {
-        playbin.set_state(Gst.State.PAUSED);
-        
+        playbin.set_state(Gst.State.PAUSED);   
     }
 
     public void stop () {

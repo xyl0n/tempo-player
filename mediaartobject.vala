@@ -1,53 +1,44 @@
-public class Tempo.AlbumObject {
+/*public class Tempo.MediaArtObject {
     
-    public string title;
-    public string song_count;
-    public string artist;
+    public Gtk.Image art_img;
+    public Gdk.Pixbuf? art_pix;
     
-    public Gtk.Image album_art;
-    public Gdk.Pixbuf album_pix;
-    
-    private MediaObject[] song_list;
-    
-    public AlbumObject() {
-    
-        Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
-        Gtk.IconInfo info = theme.lookup_icon ("folder-music-symbolic", 128,
-                                               Gtk.IconLookupFlags.FORCE_SVG);
+    public string uri;
+    public string art_dir;
         
-        var temp_pix = info.load_icon ();
-    
-        album_pix = this.make_frame (temp_pix);
-    
-        album_art = new Gtk.Image.from_pixbuf (album_pix);
-    
-        song_list = { };
+    public MediaArtObject (string media_name) {
+        var cache_dir = Environment.get_user_cache_dir ();      
+        art_dir = cache_dir + "/tempo/media-art/";   
+        
+        uri = art_dir + generate_image_key (media_name); 
+        
+        art_img = new Gtk.Image ();
+        art_pix = null;    
     }
     
-    public void add_song_to_album (MediaObject song) {
-        this.song_list += song;
-    }
-    
-    public MediaObject? get_song_at_number (int num) { //Add function get song at num, rename this to get_song_at_track_number
-        num++;
-                
-        for (int i = 0; i < song_list.length; i++) {
-            if (song_list[i].track_num == num) {
-                return song_list[i];
-            }
+    public void load_image () {
+        try {
+            // Try to load the album art image
+            var temp_pix = new Gdk.Pixbuf.from_file_at_scale (uri, 128, 128, true);
+            art_pix = temp_pix;
+        } catch (Error e) {
+            // If it fails, use a default image
+            stderr.printf ("ERROR %d: %s\n", e.code, e.message);
+            Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+            Gtk.IconInfo info = theme.lookup_icon ("folder-music-symbolic", 128,
+                                                   Gtk.IconLookupFlags.FORCE_SVG);
+            art_pix = info.load_icon();
         }
+        art_pix = make_frame (art_pix);
         
-        return null;
-    } 
-    
-    public int get_song_count () {
-        return song_list.length;
+        art_img.set_from_pixbuf (art_pix);
     }
     
-    public void load_album_art (File art_image) {
-        album_art.set_from_file (art_image.get_uri());
-    }
-    
+    public string generate_image_key (string text) {
+        return GLib.Checksum.compute_for_string(ChecksumType.MD5, text, text.length);
+    }    
+
+    // Copied some Gnome Music code, sorry :P    
     public Gdk.Pixbuf? make_frame (Gdk.Pixbuf pixbuf) {
         var border = 2;
         var degrees = 3.14 / 180; //Use some actual value of pi in future
@@ -83,5 +74,4 @@ public class Tempo.AlbumObject {
         return border_pixbuf;     
         
     }
-    
-}
+*/

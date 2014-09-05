@@ -2,7 +2,6 @@ public class Tempo.PlayerBar : Gtk.Grid {
     
     // Class for implementing a player bar        
     
-    
     public Gtk.Box control_box;
     
     public Gtk.Button play_btn;
@@ -30,9 +29,19 @@ public class Tempo.PlayerBar : Gtk.Grid {
     
     public Gtk.Label media_info_label;
     
+    public Gtk.Button shuffle_btn;
+    public Gtk.Image shuffle_on_img;
+    public Gtk.Image shuffle_off_img;
+    public Gtk.Button loop_btn;
+    public Gtk.Image loop_img;
+    
     public PlayerBar () {
+        
+        this.get_style_context().add_class (Gtk.STYLE_CLASS_TOOLBAR);
+    
         setup_media_controls ();
         setup_media_scale ();
+        setup_additional_widgets ();
     }
     
     private void setup_media_controls () {
@@ -91,6 +100,8 @@ public class Tempo.PlayerBar : Gtk.Grid {
                 
         media_dur = new Gtk.Label ("0:00");
         media_pos = new Gtk.Label ("0:00");
+        media_dur.margin = 6;
+        media_pos.margin = 6;
         
         scale_layout.pack_start (media_pos, false);
         scale_layout.pack_start (media_scale, true);
@@ -118,5 +129,33 @@ public class Tempo.PlayerBar : Gtk.Grid {
         media_info_grid.set_valign (Gtk.Align.CENTER);
         
         this.attach (media_info_grid, 1, 0, 1, 1);
+    }
+    
+    private void setup_additional_widgets () {
+        
+        var box = new Gtk.Box (Gtk.Orientation.HORIZONTAL, 0);
+        box.get_style_context().add_class (Gtk.STYLE_CLASS_LINKED);
+        
+        shuffle_on_img = new Gtk.Image.from_icon_name 
+                                 ("media-playlist-shuffle-symbolic", Gtk.IconSize.BUTTON);
+        shuffle_off_img = new Gtk.Image.from_icon_name 
+                                 ("media-playlist-no-shuffle-symbolic", Gtk.IconSize.BUTTON);
+        
+        shuffle_btn = new Gtk.Button();
+        shuffle_btn.set_image (shuffle_off_img);
+        
+        loop_img = new Gtk.Image.from_icon_name
+                                 ("media-playlist-repeat-symbolic", Gtk.IconSize.BUTTON);
+        loop_btn = new Gtk.Button();
+        loop_btn.set_image (loop_img);
+        
+        box.pack_start (shuffle_btn, false);
+        box.pack_start (loop_btn, false);
+        
+        box.set_halign (Gtk.Align.CENTER);
+        box.set_valign (Gtk.Align.CENTER);
+        box.margin = 6;
+        
+        this.attach (box, 2, 0, 1, 1);
     }
 }

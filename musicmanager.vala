@@ -1,17 +1,15 @@
 public class Tempo.MusicManager {
 
     private string music_dir;
-    
-    //public MediaObject[] song_files;
-    //public AlbumObject[] album_objects;
-    
+        
     public List<MediaObject> song_files;
     public List<AlbumObject> album_objects;
     
     private LastFm lastfm;
     
     private File art_dir;
-    
+    private string art_dir_uri;
+        
     public MusicManager () {
         this.music_dir = Tracker.Sparql.escape_string
                             (Gst.filename_to_uri
@@ -24,22 +22,21 @@ public class Tempo.MusicManager {
         this.load_music ();
         this.load_albums();
         
+        var cache_dir = Environment.get_user_cache_dir ();      
+        art_dir_uri = cache_dir + "/tempo/media-art/";  
+        DirUtils.create_with_parents (art_dir_uri, 0775);
+        
         lastfm = new LastFm();
-        
-        art_dir = File.new_for_uri (Environment.get_user_cache_dir() + "/tempo");
-        if (art_dir == null) {
-            art_dir.make_directory ();
+            
+        for (int i = 0; i < album_objects.length(); i++) {
+            var art_file = File.new_for_uri (art_dir_uri + 
+                                             lastfm.generate_image_key(
+                                                album_objects.nth_data(i).title
+                                             ));
+            
+            set_album_art(album_objects.nth_data(i));
         }
-        
-  
-        //set_album_art.begin ((obj, result) => {
-        //    set_album_art.end (result);
-        //});
-  
-        /*Thread<void*> album_art_thread = new Thread<void*> 
-                                             ("album_art_thread", 
-                                              set_album_art);
-        album_art_thread.yield(); <--- and attempt that failed */
+    
     }
     
     public string[] query_songs () {
@@ -168,73 +165,40 @@ public class Tempo.MusicManager {
         return cursor;
     }
     
-    /*private async void nap (uint interval, int priority = GLib.Priority.DEFAULT) {
-        GLib.Timeout.add (interval, () => {
-            nap.callback();
-            return false;
-        }, priority);
-        yield;
-    }*/
+    public MediaObject? get_current_media (StreamPlayer player) {
     
-    private async void set_album_art () {
+        MediaObject? current = null;
+    
+        find_from_uri (player.get_current_media_file(), out current);
         
-        SourceFunc callback = set_album_art.callback;        
-              
-        ThreadFunc<void*> run = () => { 
-        Idle.add((owned) callback);
-        for (int i = 0; i < album_objects.length(); i++) {
-            string album = album_objects.nth_data(i).title;
-            album = album.replace (" ", "+");
-            
-            string artist = album_objects.nth_data(i).artist;
-            artist = artist.replace (" ", "+");
-        
-            string url = lastfm.get_art_uri (artist, album);
-            
-            stdout.printf ("\nGETTING ART FOR: %s\n", album_objects.nth_data(i).title);
-            
-            //album_object[i].album_art_location = url; //For future reference?
-            
-            Gdk.Pixbuf pixbuf = lastfm.download_cover_art (url);
-            album_objects.nth_data(i).album_art.set_from_pixbuf (pixbuf);
-            string file_uri = "";
-            //save_art_to_dir (pixbuf, url, out file_uri);
-            //stdout.printf ("\nURI IS: %s\n", file_uri);
-                
-            //File file = File.new_for_uri (file_uri);
-                                    
-            //album_objects[i].load_album_art(file);
-            //Thread.usleep (1000);
-            //Thread.yield ();
-            }
-        
-        return null;
-        };
-        Thread.create<void*> (run, false);  
-        
-        yield;
+        return current;
     }
     
-    /*
+    //Use this async function in for loop, if the art for an image cannot be found in the cache directory
     
-    FIXME: Function designed to save art to a directory for future use, broken 
-    
-    private void save_art_to_dir (Gdk.Pixbuf pixbuf, string url, out string file_uri) {
-    
-        string name = lastfm.generate_image_key (url);
-        //File file = File.new_for_uri ("file:///home/xylon/" + name);//art_dir.get_uri() + "/" + name);
-        //IOStream ios = file.create_readwrite (FileCreateFlags.PRIVATE);
+    public async void set_album_art (AlbumObject album) { 
+        SourceFunc resume = set_album_art.callback;
         
-        //OutputStream outstream = file.create (FileCreateFlags.NONE);
+        string query_album = album.title.replace (" ", "+");
+        string query_artist = album.artist.replace (" ", "+");
         
-        //pixbuf.save_to_stream (outstream, "png");
+        string? uri = null;
+        Gdk.Pixbuf? pix = null;
         
-        pixbuf.save ("file:///home/user/.cache/tempo/" + name, "png");
-        
-        //stdout.printf ("\nURI IS: %s\n\n\n\n\n", file.get_uri()); <--- DEBUGGING
-        
-        //outstream.close();
-        
-        //file_uri = file.get_uri();        
-    }*/
+        new Thread<void*> (null, () => {        
+            uri = lastfm.get_art_uri (query_album, query_artist);
+            lastfm.download_cover_art (uri, art_dir_uri);
+                                            
+            string art_src = art_dir_uri + lastfm.generate_image_key(uri);                 
+                                
+            pix = new Gdk.Pixbuf.from_file_at_scale (art_src, 128, 128, true);    
+            var art = album.make_frame (pix);
+            album.album_art.set_from_pixbuf (art);                
+                                
+            Idle.add ((owned) resume);
+            return null;
+        });
+                        
+        yield;
+    }
 }

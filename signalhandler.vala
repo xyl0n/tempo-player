@@ -8,11 +8,9 @@ public class Tempo.SignalHandler {
     
     public void on_play_button_clicked () {
         if (_ui.player.is_playing()) {
-            stdout.printf ("PLAY BUTTON PAUSING PLAYER\n");
-            _ui.player.pause ();
+            _ui.player.playbin.set_state(Gst.State.PAUSED);
         } else {
-            stdout.printf ("PLAY BUTTON PLAYING PLAYER\n");
-            _ui.player.play ();
+            _ui.player.playbin.set_state(Gst.State.PLAYING);
         }
     }
     

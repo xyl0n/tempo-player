@@ -20,7 +20,9 @@ public class Tempo.SignalHandler {
         // If there is more media    
         if (media != null) {          
             _ui.utils.switch_to_media (media);
-            _ui.queue_manager.increment_current_position();
+            if (!_ui.queue_manager.shuffle_mode) {
+                _ui.queue_manager.increment_current_position();
+            }
         } else {
             // Otherwise, skip to end of current song
             _ui.player.seek (_ui.player.get_song_duration());
@@ -126,6 +128,11 @@ public class Tempo.SignalHandler {
             _ui.player.play();
             
             _ui.stream_playing();
+        } else if (_ui.queue_manager.is_at_end()) {
+            _ui.queue_manager.increment_current_position(); //Increase position
+            
+            _ui.player.set_media_file (song.media_uri);
+            _ui.player.play();
         }
         
         _ui.queue_manager.add_media_to_queue (song); //Add the current media to the queue
@@ -177,6 +184,10 @@ public class Tempo.SignalHandler {
             if (media != null) {      
                 _ui.utils.switch_to_media (media);
                 _ui.queue_manager.increment_current_position();
+            } else {
+                _ui.player_revealer.set_reveal_child (false);
+                _ui.stream_finished ();
+                return;
             }
         } else {
             _ui.player_revealer.set_reveal_child (false);
@@ -194,6 +205,7 @@ public class Tempo.SignalHandler {
     
     public void on_queue_position_changed () {
         _ui.queue_sidebar.update_sidebar (_ui.queue_manager.get_current_position());
+        _ui.queue_manager.played.append(_ui.queue_manager.get_current_position());
     }
     
     public void queue_reveal_request () {

@@ -34,7 +34,7 @@ public class Tempo.MusicManager {
                                                 album_objects.nth_data(i).title
                                              ));
             
-            set_album_art(album_objects.nth_data(i));
+            download_album_art(album_objects.nth_data(i));
         }
     
     }
@@ -176,29 +176,36 @@ public class Tempo.MusicManager {
     
     //Use this async function in for loop, if the art for an image cannot be found in the cache directory
     
-    public async void set_album_art (AlbumObject album) { 
-        SourceFunc resume = set_album_art.callback;
+    public async void download_album_art (AlbumObject album) { 
+        SourceFunc resume = download_album_art.callback;
         
         string query_album = album.title.replace (" ", "+");
         string query_artist = album.artist.replace (" ", "+");
         
         string? uri = null;
-        Gdk.Pixbuf? pix = null;
         
         new Thread<void*> (null, () => {        
             uri = lastfm.get_art_uri (query_album, query_artist);
-            lastfm.download_cover_art (uri, art_dir_uri);
+            var img = lastfm.download_cover_art (uri);
                                             
             string art_src = art_dir_uri + lastfm.generate_image_key(uri);                 
                                 
-            pix = new Gdk.Pixbuf.from_file_at_scale (art_src, 128, 128, true);    
-            var art = album.make_frame (pix);
-            album.album_art.set_from_pixbuf (art);                
+            img.save (art_src, "png");           
+             
+            set_album_art (album, uri); 
                                 
             Idle.add ((owned) resume);
             return null;
         });
-                        
+                                
         yield;
+    }
+    
+    public void set_album_art (AlbumObject album, string uri) {
+        string art_src = art_dir_uri + lastfm.generate_image_key(uri);                                 
+                                
+        var pix = new Gdk.Pixbuf.from_file_at_scale (art_src, 128, 128, true);    
+        var art = album.make_frame (pix);
+        album.album_art.set_from_pixbuf (art);
     }
 }

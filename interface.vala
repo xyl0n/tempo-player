@@ -194,7 +194,31 @@ public class Tempo.Interface
 				
 		view_switcher = new Gtk.StackSwitcher ();
 		
-		header.set_custom_title(view_switcher);
+		var properties_button = new Gtk.Button.from_icon_name ("document-properties-symbolic",
+		                                                   Gtk.IconSize.BUTTON);
+		                                                   
+        header.pack_end (properties_button);		       
+        
+        /*var properties_popover = new Gtk.Popover (properties_button);
+        properties_button.clicked.connect (() => {
+            if (properties_popover.get_visible()) {
+                properties_popover.hide();
+            } else {
+                properties_popover.show_all();
+            }
+        });
+        
+        var popover_box = new Gtk.Box (Gtk.Orientation.VERTICAL, 0);
+        var settings_btn = new Gtk.MenuItem.with_label ("Settings");
+        //settings_btn.get_style_context().add_class (Gtk.STYLE_CLASS_MENUITEM);
+        var about_btn = new Gtk.MenuItem.with_label ("About");
+        //about_btn.get_style_context().add_class (Gtk.STYLE_CLASS_MENUITEM);
+        popover_box.pack_start (settings_btn);
+        popover_box.pack_start (about_btn);
+                                                            
+        properties_popover.add (popover_box);*/                                                    
+                                                    
+		//header.set_custom_title(view_switcher);
 	}
     
     public void update_media_controls () {
@@ -271,7 +295,7 @@ public class Tempo.Interface
             
             i = view_path.get_indices ();
         }   
-    
+        
         player.play();
     }
 }

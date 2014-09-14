@@ -60,6 +60,31 @@ public class Tempo.Main : Object {
         window_ui.stream_playing.connect ( () => {
             window.delete_event.connect (window.hide_on_delete);
         });
+        
+        
+                /*var indicator = new AppIndicator.Indicator(win.title, "indicator-messages",
+                                              IndicatorCategory.APPLICATION_STATUS);
+
+                indicator.set_status(IndicatorStatus.ACTIVE);
+                indicator.set_attention_icon("indicator-messages-new");
+
+                var menu = new Gtk.Menu();
+
+                var item = new Gtk.MenuItem.with_label("Foo");
+                item.activate.connect(() => {
+                        indicator.set_status(IndicatorStatus.ATTENTION);
+                });
+                item.show();
+                menu.append(item);
+
+                item = new Gtk.MenuItem.with_label("Bar");
+                item.show();
+                item.activate.connect(() => {
+                        indicator.set_status(IndicatorStatus.ATTENTION);
+                });
+                menu.append(item);
+
+                indicator.set_menu(menu);*/
     }
 
     public void on_destroy (Gtk.Widget window) {

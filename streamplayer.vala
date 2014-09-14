@@ -44,9 +44,9 @@ public class Tempo.StreamPlayer {
             Gst.State pending;
             message.parse_state_changed (out old_state, out new_state,
                                          out pending);
-            stdout.printf ("state changed: %s->%s:%s\n",
-                           old_state.to_string (), new_state.to_string (),
-                           pending.to_string ());
+            //stdout.printf ("state changed: %s->%s:%s\n",
+            //               old_state.to_string (), new_state.to_string (),
+            //               pending.to_string ());
             
             if (new_state == Gst.State.PLAYING) {
                 media_playing();
@@ -54,12 +54,7 @@ public class Tempo.StreamPlayer {
             else if (new_state == Gst.State.PAUSED) {
                 media_paused();
             }
-            
-            if (old_state == Gst.State.NULL && new_state == Gst.State.READY &&
-                pending == Gst.State.PAUSED) {
-                set_state (Gst.State.PLAYING);
-            }
-            
+                        
             break;
         case MessageType.STREAM_START:
             this.media_changed ();

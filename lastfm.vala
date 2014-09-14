@@ -4,7 +4,7 @@ public class LastFm {
     
     public string? image_uri = null;
     
-    public void download_cover_art (string url, string dest) {
+    public Gdk.Pixbuf? download_cover_art (string url) {//string url, string dest) {
         
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
@@ -17,9 +17,10 @@ public class LastFm {
         Gdk.Pixbuf image = loader.get_pixbuf ();
         string name = generate_image_key (url);
         
-        image.save (dest + name, "png");        
-                
+        //image.save (dest + name, "png");        
         loader.close ();
+        
+        return image;
     }    
     
     public string generate_image_key (string text) {

@@ -1,6 +1,6 @@
 public class LastFm {
     
-    private const string API = "bd38910b927bcd49dd0be3a0053e8a19"; //Need this unfortunately :(
+    private const string API = "removed because reasons";
     
     public string? image_uri = null;
     
